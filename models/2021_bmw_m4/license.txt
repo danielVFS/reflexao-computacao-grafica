@@ -1,0 +1,11 @@
+Model Information:
+* title:	2021 BMW M4 G82 Zacoe Carbon Fiber Body kit
+* source:	https://sketchfab.com/3d-models/2021-bmw-m4-g82-zacoe-carbon-fiber-body-kit-27e547d14f2f4403a6edd42e4d890d63
+* author:	Ddiaz Design (https://sketchfab.com/ddiaz-design)
+
+Model License:
+* license type:	CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+* requirements:	Author must be credited. No commercial use. Modified versions must have the same license.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "2021 BMW M4 G82 Zacoe Carbon Fiber Body kit" (https://sketchfab.com/3d-models/2021-bmw-m4-g82-zacoe-carbon-fiber-body-kit-27e547d14f2f4403a6edd42e4d890d63) by Ddiaz Design (https://sketchfab.com/ddiaz-design) licensed under CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
