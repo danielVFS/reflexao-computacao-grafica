@@ -87,8 +87,8 @@ function init() {
         transparent: true,
         uniforms: {
           uReflectionTexture: { value: reflectionRenderTarget.texture },
-          uTransparency: { value: 0.1 },
-          uDistortionFactor: { value: 0.5 },
+          uTransparency: { value: 0.2 },
+          uDistortionFactor: { value: 1.5 },
         },
         clippingPlanes: [new THREE.Plane(new THREE.Vector3(0, 0, -1), 50)],
       });
