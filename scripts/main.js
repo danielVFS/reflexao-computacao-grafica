@@ -25,100 +25,89 @@ function init() {
   pointlight.position.set(200, 200, 200);
   scene.add(pointlight);
 
-  let envmaploader = new THREE.PMREMGenerator(renderer);
-  new THREE.RGBELoader().load(
-    "texture/cayley_interior_4k.hdr",
-    function (hdrmap) {
-      let envmap = envmaploader.fromCubemap(hdrmap);
+  let sphere = createSphere();
+  sphere.position.set(0, 0, 200);
+  scene.add(sphere);
 
-      // Esfera à frente do plano
-      let sphere1 = createSphere(envmap);
-      sphere1.position.set(0, 0, 100);
-      scene.add(sphere1);
+  let cube = createCube();
+  cube.position.set(-150, 50, -200);
+  scene.add(cube);
 
-      // Esfera atrás do plano
-      let sphere2 = createSphere(envmap);
-      sphere2.position.set(-50, 0, -100);
-      scene.add(sphere2);
-
-      reflectionRenderTarget = new THREE.WebGLRenderTarget(1024, 1024, {
-        minFilter: THREE.LinearFilter,
-        magFilter: THREE.LinearFilter,
-        format: THREE.RGBFormat,
-      });
-
-      // Plano (para-brisa)
-      const planeGeometry = new THREE.PlaneGeometry(300, 300);
-      const planeMaterial = new THREE.ShaderMaterial({
-        vertexShader: `
-          varying vec3 vWorldPosition;
-          varying vec3 vNormal;
-      
-          void main() {
-            vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
-            vNormal = normalize(normalMatrix * normal);
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: `
-          uniform sampler2D uReflectionTexture;
-          uniform float uTransparency;
-          uniform float uDistortionFactor;
-      
-          varying vec3 vWorldPosition;
-          varying vec3 vNormal;
-      
-          void main() {
-            vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
-            vec3 reflectDirection = reflect(-viewDirection, vNormal);
-      
-            reflectDirection.xy *= uDistortionFactor;
-      
-            vec2 reflectionUV = reflectDirection.xy * 0.5 + 0.5;
-      
-            vec4 reflectionColor = texture2D(uReflectionTexture, reflectionUV);
-      
-            gl_FragColor = vec4(reflectionColor.rgb, uTransparency);
-          }
-        `,
-        transparent: true,
-        depthWrite: true,
-        side: THREE.DoubleSide,
-        uniforms: {
-          uReflectionTexture: { value: reflectionRenderTarget.texture },
-          uTransparency: { value: 0.2 },
-          uDistortionFactor: { value: 1.5 },
-        },
-      });
-
-      const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-      plane.renderOrder = 1;
-      plane.position.set(0, 0, 0);
-      scene.add(plane);
-
-      animate();
-    }
-  );
-}
-
-function createSphere(envmap) {
-  let texture = new THREE.CanvasTexture(new THREE.FlakesTexture());
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(10, 10);
-
-  const ballMaterial = new THREE.MeshPhysicalMaterial({
-    clearcoat: 0,
-    clearcoatRoughness: 0.1,
-    metalness: 0.9,
-    roughness: 0.1,
-    // color: 0x8418ca,
-    normalMap: texture,
-    envMap: envmap.texture,
-    normalScale: new THREE.Vector2(0.0, 0.0),
+  reflectionRenderTarget = new THREE.WebGLRenderTarget(1024, 1024, {
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter,
+    format: THREE.RGBFormat,
   });
 
-  return new THREE.Mesh(new THREE.SphereGeometry(100, 64, 64), ballMaterial); // (100, 64, 64)
+  const planeGeometry = new THREE.PlaneGeometry(600, 600);
+  const planeMaterial = new THREE.ShaderMaterial({
+    vertexShader: `
+      varying vec3 vWorldPosition;
+      varying vec3 vNormal;
+  
+      void main() {
+        vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+        vNormal = normalize(normalMatrix * normal);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D uReflectionTexture;
+      uniform float uTransparency;
+      uniform float uDistortionFactor;
+  
+      varying vec3 vWorldPosition;
+      varying vec3 vNormal;
+  
+      void main() {
+        vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
+        vec3 reflectDirection = reflect(-viewDirection, vNormal);
+  
+        reflectDirection.xy *= uDistortionFactor;
+  
+        vec2 reflectionUV = reflectDirection.xy * 0.5 + 0.5;
+  
+        vec4 reflectionColor = texture2D(uReflectionTexture, reflectionUV);
+  
+        gl_FragColor = vec4(reflectionColor.rgb, uTransparency);
+      }
+    `,
+    transparent: true,
+    depthWrite: true,
+    side: THREE.DoubleSide,
+    uniforms: {
+      uReflectionTexture: { value: reflectionRenderTarget.texture },
+      uTransparency: { value: 0.3 },
+      uDistortionFactor: { value: 1.5 },
+    },
+  });
+
+  const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+  plane.renderOrder = 1;
+  plane.position.set(0, 0, 0);
+  scene.add(plane);
+
+  animate();
+}
+
+function createSphere() {
+  const ballMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xff0000,
+    metalness: 0.5,
+    roughness: 0.2,
+  });
+
+  return new THREE.Mesh(new THREE.SphereGeometry(100, 64, 64), ballMaterial);
+}
+
+function createCube() {
+  const ballMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0x0080ff,
+    metalness: 0.5,
+    roughness: 0.2,
+  });
+
+  return new THREE.Mesh(new THREE.BoxGeometry(100, 100, 100), ballMaterial);
 }
 
 function renderReflection() {
