@@ -116,9 +116,14 @@ function renderReflection() {
   reflectionCamera.position.y *= -1;
   reflectionCamera.lookAt(new THREE.Vector3(0, 0, 0));
 
+  const clippingPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0); // Plano de corte na direção positiva de Z
+  renderer.clippingPlanes = [clippingPlane];
+
   renderer.setRenderTarget(reflectionRenderTarget);
   renderer.render(scene, reflectionCamera);
   renderer.setRenderTarget(null);
+
+  renderer.clippingPlanes = [];
 }
 
 function animate() {
