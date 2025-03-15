@@ -17,23 +17,20 @@ function init() {
     1,
     1000
   );
-  camera.position.set(200, 200, 200);
-  
+  camera.position.set(0, 100, 500);
+
   controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-  pointLight = new THREE.PointLight(0xffffff, 1.5);
+  pointLight = new THREE.PointLight(0xffffff, 1);
   pointLight.position.set(200, 200, 200);
   scene.add(pointLight);
 
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-  scene.add(ambientLight);
-
-  const sphere = createSphere();
-  sphere.position.set(-100, 50, 0);
+  let sphere = createSphere();
+  sphere.position.set(100, 0, 50);
   scene.add(sphere);
 
-  const cube = createCube();
-  cube.position.set(100, 50, 0);
+  let cube = createCube();
+  cube.position.set(-100, 50, -50);
   scene.add(cube);
 
   reflectionRenderTarget = new THREE.WebGLRenderTarget(1024, 1024, {
@@ -42,12 +39,11 @@ function init() {
     format: THREE.RGBFormat,
   });
 
-  const planeGeometry = new THREE.PlaneGeometry(500, 500);
-  planeMaterial = new THREE.ShaderMaterial({
+  const planeGeometry = new THREE.PlaneGeometry(600, 600);
+  const planeMaterial = new THREE.ShaderMaterial({
     vertexShader: `
       varying vec3 vWorldPosition;
       varying vec3 vNormal;
-  
       void main() {
         vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
         vNormal = normalize(normalMatrix * normal);
@@ -58,21 +54,21 @@ function init() {
       uniform sampler2D uReflectionTexture;
       uniform float uTransparency;
       uniform float uDistortionFactor;
-  
+      uniform vec3 uBaseColor;
+      
       varying vec3 vWorldPosition;
       varying vec3 vNormal;
-  
+      
       void main() {
-        vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
-        vec3 reflectDirection = reflect(-viewDirection, vNormal);
-  
-        reflectDirection.xy *= uDistortionFactor;
-  
-        vec2 reflectionUV = reflectDirection.xy * 0.5 + 0.5;
-  
+        vec3 viewDir = normalize(cameraPosition - vWorldPosition);
+        vec3 reflectDir = reflect(-viewDir, vNormal);
+        reflectDir.xy *= uDistortionFactor;
+        vec2 reflectionUV = reflectDir.xy * 0.5 + 0.5;
+
         vec4 reflectionColor = texture2D(uReflectionTexture, reflectionUV);
-  
-        gl_FragColor = vec4(reflectionColor.rgb, uTransparency);
+        vec3 finalColor = mix(uBaseColor, reflectionColor.rgb, 0.6);
+
+        gl_FragColor = vec4(finalColor, uTransparency);
       }
     `,
     transparent: true,
@@ -80,17 +76,14 @@ function init() {
     side: THREE.DoubleSide,
     uniforms: {
       uReflectionTexture: { value: reflectionRenderTarget.texture },
-      uTransparency: { value: 0.7 }, 
-      uDistortionFactor: { value: 1.0 }, 
-      cameraPosition: { value: camera.position },
+      uTransparency: { value: 0.5 },
+      uDistortionFactor: { value: 1.2 },
+      uBaseColor: { value: new THREE.Color(0x888888) },
     },
   });
 
-
   const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-  plane.rotation.y = Math.PI / 2;
-  plane.position.set(0, 50, 0);
-  plane.name = "dividerPlane";
+  plane.position.set(0, 0, 0);
   scene.add(plane);
 
   animate();
@@ -109,7 +102,7 @@ function createSphere() {
 
 function createCube() {
   return new THREE.Mesh(
-    new THREE.BoxGeometry(50, 50, 50),
+    new THREE.BoxGeometry(100, 100, 100),
     new THREE.MeshPhysicalMaterial({
       color: 0x0080ff,
       metalness: 0.5,
@@ -120,12 +113,8 @@ function createCube() {
 
 function renderReflection() {
   const reflectionCamera = camera.clone();
-  const plane = scene.getObjectByName("dividerPlane");
-
-  const planePosition = plane.position.clone();
-  const distanceToPlane = camera.position.z - planePosition.z;
-  reflectionCamera.position.z = planePosition.z - distanceToPlane;
-  reflectionCamera.lookAt(planePosition);
+  reflectionCamera.position.y *= -1;
+  reflectionCamera.lookAt(new THREE.Vector3(0, 0, 0));
 
   renderer.setRenderTarget(reflectionRenderTarget);
   renderer.render(scene, reflectionCamera);
