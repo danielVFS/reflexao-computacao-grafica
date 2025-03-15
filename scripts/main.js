@@ -73,7 +73,7 @@ function init() {
     `,
     transparent: true,
     depthWrite: true,
-    side: THREE.DoubleSide,
+    side: THREE.FrontSide,
     uniforms: {
       uReflectionTexture: { value: reflectionRenderTarget.texture },
       uTransparency: { value: 0.5 },
