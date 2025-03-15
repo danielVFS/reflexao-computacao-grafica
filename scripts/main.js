@@ -26,11 +26,11 @@ function init() {
   scene.add(pointLight);
 
   let sphere = createSphere();
-  sphere.position.set(100, 0, 50);
+  sphere.position.set(130, 0, 150); // 150 distancia pro plano
   scene.add(sphere);
 
   let cube = createCube();
-  cube.position.set(-100, 50, -50);
+  cube.position.set(-130, 50, -150); // -150 distancia pro plano
   scene.add(cube);
 
   reflectionRenderTarget = new THREE.WebGLRenderTarget(1024, 1024, {
