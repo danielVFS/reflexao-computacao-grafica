@@ -26,11 +26,11 @@ function init() {
   scene.add(pointLight);
 
   let sphere = createSphere();
-  sphere.position.set(130, 0, 150); // 150 distancia pro plano
+  sphere.position.set(130, 0, 150);
   scene.add(sphere);
 
   let cube = createCube();
-  cube.position.set(-130, 50, -150); // -150 distancia pro plano
+  cube.position.set(-130, 50, -150);
   scene.add(cube);
 
   reflectionRenderTarget = new THREE.WebGLRenderTarget(1024, 1024, {
@@ -40,37 +40,46 @@ function init() {
   });
 
   const planeGeometry = new THREE.PlaneGeometry(600, 600);
+
   const planeMaterial = new THREE.ShaderMaterial({
     vertexShader: `
-      varying vec3 vWorldPosition;
-      varying vec3 vNormal;
+      precision mediump float;
+
+      out vec3 vWorldPosition;
+      out vec3 vNormal;
+
       void main() {
         vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
         vNormal = normalize(normalMatrix * normal);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
       }
     `,
     fragmentShader: `
+      precision mediump float;
+
       uniform sampler2D uReflectionTexture;
       uniform float uTransparency;
       uniform float uDistortionFactor;
       uniform vec3 uBaseColor;
-      
-      varying vec3 vWorldPosition;
-      varying vec3 vNormal;
-      
+
+      in vec3 vWorldPosition;
+      in vec3 vNormal;
+
+      out vec4 fragColor;
+
       void main() {
         vec3 viewDir = normalize(cameraPosition - vWorldPosition);
         vec3 reflectDir = reflect(-viewDir, vNormal);
         reflectDir.xy *= uDistortionFactor;
         vec2 reflectionUV = reflectDir.xy * 0.5 + 0.5;
 
-        vec4 reflectionColor = texture2D(uReflectionTexture, reflectionUV);
+        vec4 reflectionColor = texture(uReflectionTexture, reflectionUV);
         vec3 finalColor = mix(uBaseColor, reflectionColor.rgb, 0.6);
 
-        gl_FragColor = vec4(finalColor, uTransparency);
+        fragColor = vec4(finalColor, uTransparency);
       }
     `,
+    glslVersion: THREE.GLSL3,
     transparent: true,
     depthWrite: true,
     side: THREE.FrontSide,
@@ -116,7 +125,7 @@ function renderReflection() {
   reflectionCamera.position.y *= -1;
   reflectionCamera.lookAt(new THREE.Vector3(0, 0, 0));
 
-  const clippingPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0); // Plano de corte na direção positiva de Z
+  const clippingPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
   renderer.clippingPlanes = [clippingPlane];
 
   renderer.setRenderTarget(reflectionRenderTarget);
