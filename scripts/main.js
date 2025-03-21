@@ -12,25 +12,27 @@ function init() {
   renderer.localClippingEnabled = true; 
 
   camera = new THREE.PerspectiveCamera(
-    50, 
-    window.innerWidth / window.innerHeight, 
-    1, 
-    1000);
-  camera.position.set(0, 200, 500);
+    50, window.innerWidth / window.innerHeight, 1, 1000);
+  camera.position.set(0, 0, 500);
 
   controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-  pointLight = new THREE.PointLight(0xffffff, 1);
-  pointLight.position.set(200, 200, 200);
+  pointLight = new THREE.PointLight(0xffffff, 1.5);
+  pointLight.position.set(10, 10, 10);
+  pointLight.intenstity = 1.0;
   scene.add(pointLight);
 
-  let sphere = createSphere();
-  sphere.position.set(130, 50, 150);
-  scene.add(sphere);
+  let cubeColored = createColoredCube(); 
+  cubeColored.position.set(130, 50, 150);
+  scene.add(cubeColored);
 
   let cube = createCube(); 
   cube.position.set(-130, 50, -150);
   scene.add(cube);
+
+  /*let sphere = createSphere();
+  sphere.position.set(130, 50, 150);
+  scene.add(sphere);*/
 
   reflectionRenderTarget = new THREE.WebGLRenderTarget(1024, 1024, {
     minFilter: THREE.LinearFilter,
@@ -74,7 +76,6 @@ function init() {
     uniforms: {
       uReflectionTexture: { value: reflectionRenderTarget.texture },
       uTransparency: { value: 0.5 },
-      uDistortionFactor: { value: 1.2 },
       uBaseColor: { value: new THREE.Color(0x888888) },
     },
   });
@@ -87,20 +88,24 @@ function init() {
   animate();
 }
 
-function createSphere() {
-  return new THREE.Mesh(
-    new THREE.SphereGeometry(50, 64, 64),
+function createColoredCube() {
+  const geometry = new THREE.BoxGeometry(50, 64, 64);
+  const materials = [
+    new THREE.MeshBasicMaterial({ color: 0xff0000 }), 
+    new THREE.MeshBasicMaterial({ color: 0x00ff00 }), 
+    new THREE.MeshBasicMaterial({ color: 0x0000ff }), 
+    new THREE.MeshBasicMaterial({ color: 0xffff00 }), 
+    new THREE.MeshBasicMaterial({ color: 0xff00ff }), 
+    new THREE.MeshBasicMaterial({ color: 0x00ffff }), 
     new THREE.MeshPhysicalMaterial({
-      color: 0xff0000,
-      metalness: 0.5,
-      roughness: 0.2,
-    })
-  );
+        metalness: 0.5,
+        roughness: 0.2,
+      })
+  ];
+  return new THREE.Mesh(geometry, materials);
 }
 
 function createCube() {
-  //const clippingPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), -20); 
-
   return new THREE.Mesh(
     new THREE.BoxGeometry(100, 100, 100),
     new THREE.MeshPhysicalMaterial({
@@ -110,6 +115,17 @@ function createCube() {
     })
   );
 }
+
+/*function createSphere() {
+  return new THREE.Mesh(
+    new THREE.SphereGeometry(50, 64, 64),
+    new THREE.MeshPhysicalMaterial({
+      color: 0xff0000,
+      metalness: 0.5,
+      roughness: 0.2,
+    })
+  );
+}*/
 
 function renderReflection() {
   const reflectionCamera = camera.clone();
@@ -123,7 +139,7 @@ function renderReflection() {
   renderer.render(scene, reflectionCamera);
   renderer.setRenderTarget(null);
 
-  Planes = [];
+  renderer.clippingPlanes = [];
 }
 
 function animate() {
@@ -132,6 +148,7 @@ function animate() {
   controls.update();
   renderer.render(scene, camera);
 }
+
 
 init();
 
