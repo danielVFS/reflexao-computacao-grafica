@@ -1,4 +1,4 @@
-let scene, camera, renderer, controls, pointLight, reflectionRenderTarget;
+let scene, camera, renderer, controls, pointLight, reflectionRenderTarget, reflectionCamera;
 
 function init() {
   scene = new THREE.Scene();
@@ -9,15 +9,14 @@ function init() {
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.25;
-  renderer.localClippingEnabled = true;
+  renderer.localClippingEnabled = true; 
 
   camera = new THREE.PerspectiveCamera(
-    50,
-    window.innerWidth / window.innerHeight,
-    1,
-    1000
-  );
-  camera.position.set(0, 100, 500);
+    50, 
+    window.innerWidth / window.innerHeight, 
+    1, 
+    1000);
+  camera.position.set(0, 200, 500);
 
   controls = new THREE.OrbitControls(camera, renderer.domElement);
 
@@ -26,10 +25,10 @@ function init() {
   scene.add(pointLight);
 
   let sphere = createSphere();
-  sphere.position.set(130, 0, 150);
+  sphere.position.set(130, 50, 150);
   scene.add(sphere);
 
-  let cube = createCube();
+  let cube = createCube(); 
   cube.position.set(-130, 50, -150);
   scene.add(cube);
 
@@ -39,15 +38,14 @@ function init() {
     format: THREE.RGBFormat,
   });
 
-  const planeGeometry = new THREE.PlaneGeometry(600, 600);
+  reflectionCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
 
+  const planeGeometry = new THREE.PlaneGeometry(600, 600);
   const planeMaterial = new THREE.ShaderMaterial({
     vertexShader: `
       precision mediump float;
-
       out vec3 vWorldPosition;
       out vec3 vNormal;
-
       void main() {
         vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
         vNormal = normalize(normalMatrix * normal);
@@ -56,26 +54,16 @@ function init() {
     `,
     fragmentShader: `
       precision mediump float;
-
       uniform sampler2D uReflectionTexture;
       uniform float uTransparency;
-      uniform float uDistortionFactor;
       uniform vec3 uBaseColor;
-
       in vec3 vWorldPosition;
       in vec3 vNormal;
-
       out vec4 fragColor;
-
       void main() {
-        vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-        vec3 reflectDir = reflect(-viewDir, vNormal);
-        reflectDir.xy *= uDistortionFactor;
-        vec2 reflectionUV = reflectDir.xy * 0.5 + 0.5;
-
-        vec4 reflectionColor = texture(uReflectionTexture, reflectionUV);
+        vec2 uv = (vWorldPosition.xz + vec2(300.0)) / 600.0;
+        vec4 reflectionColor = texture(uReflectionTexture, uv);
         vec3 finalColor = mix(uBaseColor, reflectionColor.rgb, 0.6);
-
         fragColor = vec4(finalColor, uTransparency);
       }
     `,
@@ -92,6 +80,7 @@ function init() {
   });
 
   const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+  plane.rotation.x = -Math.PI / 2;
   plane.position.set(0, 0, 0);
   scene.add(plane);
 
@@ -110,6 +99,8 @@ function createSphere() {
 }
 
 function createCube() {
+  //const clippingPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), -20); 
+
   return new THREE.Mesh(
     new THREE.BoxGeometry(100, 100, 100),
     new THREE.MeshPhysicalMaterial({
@@ -122,7 +113,7 @@ function createCube() {
 
 function renderReflection() {
   const reflectionCamera = camera.clone();
-  reflectionCamera.position.y *= -1;
+  reflectionCamera.position.y = -camera.position.y;
   reflectionCamera.lookAt(new THREE.Vector3(0, 0, 0));
 
   const clippingPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -132,7 +123,7 @@ function renderReflection() {
   renderer.render(scene, reflectionCamera);
   renderer.setRenderTarget(null);
 
-  renderer.clippingPlanes = [];
+  Planes = [];
 }
 
 function animate() {
