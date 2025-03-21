@@ -141,7 +141,7 @@ function renderReflection() {
   const reflectionCamera = camera.clone();
   reflectionCamera.position.copy(camera.position);
   reflectionCamera.position.z = -camera.position.z;
-  reflectionCamera.lookAt(new THREE.Vector3(0, 1, 0));
+  reflectionCamera.lookAt(new THREE.Vector3(0, -1, 0));
 
   const clippingPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
   renderer.clippingPlanes = [clippingPlane];
