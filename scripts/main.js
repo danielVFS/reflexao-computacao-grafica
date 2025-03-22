@@ -39,16 +39,22 @@ function init() {
     format: THREE.RGBFormat,
   });
 
+ 
+  const textureLoader = new THREE.TextureLoader();
+  const texture = textureLoader.load("./texture/granulated-surface.jpg");
+
   const planeGeometry = new THREE.PlaneGeometry(600, 600);
 
   const planeMaterial = new THREE.ShaderMaterial({
     vertexShader: `
       precision mediump float;
 
+      out vec2 vUv;
       out vec3 vWorldPosition;
       out vec3 vNormal;
 
       void main() {
+        vUv = uv;
         vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
         vNormal = normalize(normalMatrix * normal);
         gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
@@ -57,11 +63,13 @@ function init() {
     fragmentShader: `
       precision mediump float;
 
+      uniform sampler2D uTexture;
       uniform sampler2D uReflectionTexture;
       uniform float uTransparency;
       uniform float uDistortionFactor;
       uniform vec3 uBaseColor;
 
+      in vec2 vUv;
       in vec3 vWorldPosition;
       in vec3 vNormal;
 
@@ -74,7 +82,9 @@ function init() {
         vec2 reflectionUV = reflectDir.xy * 0.5 + 0.5;
 
         vec4 reflectionColor = texture(uReflectionTexture, reflectionUV);
-        vec3 finalColor = mix(uBaseColor, reflectionColor.rgb, 0.6);
+        vec4 textureColor = texture(uTexture, vUv); 
+
+        vec3 finalColor = mix(textureColor.rgb, reflectionColor.rgb, 0.6);
 
         fragColor = vec4(finalColor, uTransparency);
       }
@@ -84,8 +94,9 @@ function init() {
     depthWrite: true,
     side: THREE.FrontSide,
     uniforms: {
+      uTexture: { value: texture }, 
       uReflectionTexture: { value: reflectionRenderTarget.texture },
-      uTransparency: { value: 0.5 },
+      uTransparency: { value: 0.8 },
       uDistortionFactor: { value: 1.2 },
       uBaseColor: { value: new THREE.Color(0x888888) },
     },
