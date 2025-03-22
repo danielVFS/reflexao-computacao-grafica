@@ -26,7 +26,7 @@ function init() {
   scene.add(pointLight);
 
   let coloredCube = createColoredCube();
-  coloredCube.position.set(130, 0, 150);
+  coloredCube.position.set(0, -20, 150);
   scene.add(coloredCube);
 
   let cube = createCube();
@@ -39,7 +39,6 @@ function init() {
     format: THREE.RGBFormat,
   });
 
- 
   const textureLoader = new THREE.TextureLoader();
   const texture = textureLoader.load("./texture/granulated-surface.jpg");
 
@@ -94,7 +93,7 @@ function init() {
     depthWrite: true,
     side: THREE.FrontSide,
     uniforms: {
-      uTexture: { value: texture }, 
+      uTexture: { value: texture },
       uReflectionTexture: { value: reflectionRenderTarget.texture },
       uTransparency: { value: 0.8 },
       uDistortionFactor: { value: 1.2 },
